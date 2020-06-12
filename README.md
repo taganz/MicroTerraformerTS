@@ -1,14 +1,12 @@
-# TypeScript Sample: Warship Combat 
+# MicroTerraformerTS
 
 ## Overview 
 
-The classic grid-based warship combat game
-- Use of the jQuery and jQuery UI wrappers
-- Use of object-oriented techniques
-
+A test using TypeScript...
 
 ## Running 
 ```
+TBD
 tsc --sourcemap --target ES5 warship.ts
 start default.html
 ```
