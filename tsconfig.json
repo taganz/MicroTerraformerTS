@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        //"target":  "es5",
+        "target":"ES2015",
+        "sourceMap": true
+    },
+    "files": [
+        "microterraformer-ts.ts",
+        "Controller.ts",
+        "World.ts"
+    ]
+}
