@@ -1,12 +1,17 @@
 {
     "compilerOptions": {
         //"target":  "es5",
-        "target":"ES2015",
-        "sourceMap": true
+        "target":"ES2015",    // te moduls
+        //"module":"umd",
+        //"module":"commonjs",
+        "sourceMap": true,
+        "outDir": "app/"
     },
     "files": [
         "microterraformer-ts.ts",
         "Controller.ts",
-        "World.ts"
+        "World.ts",
+        "jquery.d.ts",
+        "jqueryui.d.ts"
     ]
 }

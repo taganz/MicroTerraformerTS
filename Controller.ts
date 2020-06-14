@@ -2,7 +2,7 @@
 /// <reference path='jqueryui.d.ts' />
 /// <reference path='world.ts' />
 
-import { World } from "./World"; 
+import { World } from "./World.js"    // .js perque si no no ho posa al .js"; 
 
 export class Controller
     {

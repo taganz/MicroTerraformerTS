@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no" />
+    <!-- 
+    <script src="http://code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="http://code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    -->
+    <link rel="stylesheet"  href="/css/style.css" />
+    <style>
+        * {
+    box-sizing: border-box;
+  }
+  
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  
+
+  /* The grid container */
+  .grid-container {
+    display: grid;
+    grid-template-areas: 
+      'header header header header' 
+      'left left left right' 
+    /* grid-column-gap: 10px; - if you want gap between the columns */
+  } 
+  
+  
+    /* Style the header */
+    .header {
+        grid-area: header;
+        background-color: LightGray;
+        padding: 30px;
+        text-align: center;
+        font-size: 35px;
+      }
+      
+
+  .info-panel {
+    grid-area: right;
+  }
+  
+
+  #map {
+    color: darkblue;
+    grid-area: left;
+    padding: 10px;
+    background-color: aqua;
+  }
+  
+
+  .text {
+   /* grid-area: right; */
+    padding: 10px;
+    background-color: Orange;
+    text-align: center;
+  }
+  
+
+  .buttons {
+   /* grid-area: right; */
+    background-color:Tomato;
+    padding: 10px;
+  }
+  
+  /* Responsive layout - makes the three columns stack on top of each other instead of next to each other */
+  @media (max-width: 600px) {
+    .grid-container  {
+      grid-template-areas: 
+        'header header header header ' 
+        'left left left left ' 
+        'right right right right ' 
+    }
+  }
+    </style>
+    <script type = "module" src="microterraformer-ts.js"></script>
+    <title>Micro Terraformer TS</title>
+</head>
+<body>
+    <div class="grid-container">
+        <div class="header">
+            <h1>MicroTerraformer TS</h1>
+        </div>
+        <div id="map">Map</div>
+        <div id="info-panel">
+            <div id="buttons-control" class="buttons">Control</div>
+            <div id="buttons-maps" class="buttons">Maps</div>
+            <div id="status" class="text">Status</div>
+            <div id="instructions" class="text">Instructions</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
