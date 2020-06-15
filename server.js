@@ -20,6 +20,7 @@ app.use(function (req, res, next) {
 // els statics que es demanen per arrel s'envien des de app
 //app.use('/', express.static('app'));   
 app.use(express.static(__dirname + '/app'));
+app.use(express.static(__dirname + '/app/css'));
 
 app.get('/', function(req, res){
     res.sendFile(path.join(__dirname, './app/', 'default.html'));

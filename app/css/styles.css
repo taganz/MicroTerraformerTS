@@ -21,9 +21,9 @@
     .header {
         grid-area: header;
         background-color: LightGray;
-        padding: 30px;
+        padding: 20px;
         text-align: center;
-        font-size: 35px;
+        font-size: 15px;
       }
       
 

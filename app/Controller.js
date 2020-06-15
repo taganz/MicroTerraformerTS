@@ -29,4 +29,4 @@ export class Controller {
         console.log(msg);
     }
 }
-//# sourceMappingURL=controller.js.map
+//# sourceMappingURL=Controller.js.map

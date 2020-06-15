@@ -9,7 +9,6 @@
     },
     "files": [
         "microterraformer-ts.ts",
-        "Controller.ts",
         "World.ts",
         "jquery.d.ts",
         "jqueryui.d.ts"
