@@ -1,55 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 
-namespace MicroTerraformer2
-{
-
-    /// <summary>
-    /// World holds the world bitmap, where creatures live. It manages iterations for them.
-    /// </summary>
     class World
     {
 
-        public void NewWorld()
-        {
-            // different initialization options for test purposes
-
-            bmp = NewTestWorld(64, 64);
-            //bmp = NewTestWorld3x3();
-
-            InitializeBitmap();
-        }
-
-        /// <summary>
-        /// load an image  
-        /// (I use a copy because sometimes file was locked...?)
-        /// </summary>
-        public void NewLoadWorld(string fileName)
-        {
-            // Create a new bitmap.
-            Bitmap bmp3 = new Bitmap(fileName);
-            bmp = new Bitmap(bmp3);
-            bmp3.Dispose();
-            InitializeBitmap();
-        }
-
-        private void InitializeBitmap()
-        {
-
-            // check there are no invalid cells
-            InitializeCreaturesInBmp();
-
-            // create working copy
-            bmp2 = new Bitmap(bmp);
-
-
-        }
-
-
+        
         public void Iteration()
         {
 
@@ -131,6 +85,14 @@ namespace MicroTerraformer2
             // when finished, copy working bmp over bmp
             bmp = new Bitmap(bmp2);                                       // TO BE OPTIMIZED <----
         }
+
+
+/*
+
+    SOC AQUI
+
+*/
+
 
         // attack neighbour and update bmp2 with result
         // if joe kills a neighbour or is killed by its neighbours, returns true to stop checking other directions

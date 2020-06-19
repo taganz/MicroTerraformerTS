@@ -1,37 +1,48 @@
 /// <reference path='World.ts' />
 import { World } from "./World.js"; // .js perque si no no ho posa al .js
-var canvas = document.getElementById("canvas");
-var ctx = canvas.getContext("2d");
-var world = new World(ctx);
+let world = new World(6, 3);
+let htmlCanvas = document.getElementById("canvas");
+let ctxHtmlCanvas = htmlCanvas.getContext("2d");
+ctxHtmlCanvas.mozImageSmoothingEnabled = false;
+ctxHtmlCanvas.webkitImageSmoothingEnabled = false;
+ctxHtmlCanvas.msImageSmoothingEnabled = false;
+ctxHtmlCanvas.imageSmoothingEnabled = false;
+let imageData = ctxHtmlCanvas.getImageData(0, 0, htmlCanvas.width, htmlCanvas.height);
+// lastCanvas stores the last calculated image
+let worldImageCanvas = document.createElement("canvas");
+let lastCtx = worldImageCanvas.getContext("2d");
+worldImageCanvas.width = world.imageData.width;
+worldImageCanvas.height = world.imageData.height;
+doNew();
 function updateCanvas() {
-    ctx.putImageData(world.imageData, 0, 0);
+    worldImageCanvas.getContext("2d").putImageData(world.imageData, 0, 0);
+    ctxHtmlCanvas.drawImage(worldImageCanvas, 0, 0, 400, 200);
 }
-logStatus("Microterraformer-TS is loaded");
-var iteration; // aixo ho hauria de tornar world.step()?
-// funcions onClic dels botons
 // new simulation
-document.getElementById("btn-new").addEventListener("click", function () {
+function doNew() {
     logStatus("new");
-    iteration = 0;
-    world.reset();
+    world.new();
     updateCanvas();
+}
+document.getElementById("btn-new").addEventListener("click", function () {
+    doNew();
 });
 // step simulation
 function doStep() {
+    //world.step(lastCtx.getImageData(0,0,lastCanvas.width, lastCanvas.height));
     world.step();
     updateCanvas();
-    iteration++;
     logStatus("step " + world.iteration);
-}
-function doRun() {
-    doStep();
-    aTimer = window.setTimeout(doRun, 100);
 }
 document.getElementById("btn-step").addEventListener("click", function () {
     doStep();
 });
 // run simulation
-var aTimer;
+let aTimer;
+function doRun() {
+    doStep();
+    aTimer = window.setTimeout(doRun, 100);
+}
 document.getElementById("btn-run").addEventListener("click", function () {
     logStatus("run");
     aTimer = window.setTimeout(doRun, 100);
@@ -51,6 +62,10 @@ document.getElementById("btn-load").addEventListener("click", function () {
     logStatus("load, not available!");
     // --> com seleccionar el nom?
     world.newLoadWorld("savedWorld");
+    // proves
+    //world.step(lastCtx.getImageData(0,0,lastCanvas.width, lastCanvas.height));
+    //updateCanvas();
+    //logStatus("stepOld "+ world.iteration); 
 });
 // save world
 document.getElementById("btn-save").addEventListener("click", function () {
@@ -61,4 +76,5 @@ function logStatus(msg) {
     document.getElementById("status").innerHTML = msg;
     console.log(msg);
 }
+logStatus("Microterraformer-TS is loaded");
 //# sourceMappingURL=microterraformer-ts.js.map
