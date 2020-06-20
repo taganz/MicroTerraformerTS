@@ -73,15 +73,15 @@ export class World {
                     done = this.iterationCheckNeighbour(joe, x, y, x + 1, y);
                 }
                 // combat at south-east
-                if ((!done) && (x < this.imageData.width - 1) && (y < this.imageData.height - 1)) {
+                if (!done && x < this.imageData.width - 1 && y < this.imageData.heigth - 1) {
                     done = this.iterationCheckNeighbour(joe, x, y, x + 1, y + 1);
                 }
                 // combat at south
-                if (!done && y < this.imageData.height - 1) {
+                if (!done && y < this.imageData.heigth - 1) {
                     done = this.iterationCheckNeighbour(joe, x, y, x, y + 1);
                 }
                 // combat at south-west
-                if (!done && x > 1 && y < this.imageData.height - 1) {
+                if (!done && x > 1 && y < this.imageData.heigth - 1) {
                     done = this.iterationCheckNeighbour(joe, x, y, x - 1, y + 1);
                 }
                 // nothing happened with any neighbour, keep joe

@@ -33,6 +33,7 @@ export class CreatureSettings {
     public static deadCreatureColor: Color = {r: 255, g: 255, b: 255};    // equivalent to less defense soil
     public static soilColor: Color = {r: 255, g: 255, b: 128};   
     public static errorColor: Color = {r: 240, g: 50, b: 12};   
+    public static blackColor: Color = {r: 255, g: 255, b: 255};   
     
 
     //
@@ -88,6 +89,7 @@ export class Creature {
     // If herbivores or carnivores are not still activated, don't consume energy
     beginIteration(c: Color){
         this.me = Creature.lifeParametersFromColor(c);
+        this.myColor = Creature.colorFromLifeParameters(this.me);
 
             // not "living creatures" doesn't have metabolism...
             if (this.me.trophicLevel == ThrophicLevel.SOIL)
@@ -248,7 +250,7 @@ export class Creature {
 
 
 
-    isTimeForMoving() : Boolean {
+    isTimeForMoving() : boolean {
         let p : number = Math.random();
         switch (this.me.trophicLevel)
         {
@@ -264,7 +266,7 @@ export class Creature {
     }
 
     
-    isTimeForReproduction(): Boolean{
+    isTimeForReproduction(): boolean{
         let p : number = Math.random();
         switch(this.me.trophicLevel)
         {
@@ -280,12 +282,33 @@ export class Creature {
     }
     
 
-    /*
-    isTimeForReproductionColor(c1: Color) : Color{
-        let c2 : Color = {r: 0, g: 0, b: 0};
-        return c2;
+    // return color for offspring or black if none
+    static isTimeForReproductionColor(c2: Color) : Color{
+            let q : number = 0;
+            let pars : LifeParameters= this.lifeParametersFromColor(c2);
+            switch (pars.trophicLevel)
+            {
+                case ThrophicLevel.PLANT:
+                    q = CreatureSettings.PLANT_REPRODUCTION_PROBABILITY;
+                    break;
+                case ThrophicLevel.HERBIVORE:
+                    q = CreatureSettings.HERBIVORE_REPRODUCTION_PROBABILITY;
+                    break;
+                case ThrophicLevel.CARNIVORE:
+                    q = CreatureSettings.CARNIVORE_REPRODUCTION_PROBABILITY;
+                    break;
+
+            }
+            if (q > Math.random())
+            {
+                pars.energyLevel = CreatureSettings.ENERGY_LEVEL_AT_BIRTH;                 // <--- TO BE INCLUDED: mutations
+                return this.colorFromLifeParameters(pars);
+            }
+            else
+                return CreatureSettings.deadCreatureColor;
+ 
     }
-    */
+    
 
     getTrophicLevel(c : Color): number {
         return 0;

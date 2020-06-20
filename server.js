@@ -21,6 +21,7 @@ app.use(function (req, res, next) {
 //app.use('/', express.static('app'));   
 app.use(express.static(__dirname + '/app'));
 app.use(express.static(__dirname + '/app/css'));
+app.use(express.static(__dirname + '/src'));   // per debug
 
 app.get('/', function(req, res){
     res.sendFile(path.join(__dirname, './app/', 'default.html'));

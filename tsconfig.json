@@ -8,9 +8,9 @@
         "outDir": "app/"
     },
     "files": [
-        "microterraformer-ts.ts",
-        "World.ts",
-        "Creature.ts",
+        "src/microterraformer-ts.ts",
+        "src/World.ts",
+        "src/Creature.ts",
         "jquery.d.ts",
         "jqueryui.d.ts"
     ]

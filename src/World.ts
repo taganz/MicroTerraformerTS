@@ -56,13 +56,13 @@ export class World  {
         // we'll use this object to work with creatures
         let joe = <any> new Creature();
         let cJoe: Color;
-        let done: Boolean;
+        let done: boolean;
 
         // for each cell in imageData 
         for(let y=0; y<this.imageData.height; y++){
             for(let x=0;x<this.imageData.width; x++) {
 
-                done:false;
+                done = false;
             
                 // we first must check if joe has already been processed in a previous step 
                 // (may be it won an attack when its North neighbour attacked it...
@@ -71,7 +71,7 @@ export class World  {
                 let c : Color = this.getPixelColor(x,y);
 
                 // if cell is not black, then joe has already been processed
-                    if  (!(c.r==0 && c.g==0 && c.b==0 )) {
+                if  (!(c===CreatureSettings.blackColor)) {
                     done = true;  
                 }
 
@@ -80,7 +80,7 @@ export class World  {
 
                     // joe lives at x,y. get its actual color
                     let cJoe = this.getOldPixelColor(x, y);
-                    console.log("Joe1 at ", x, y, cJoe, Creature.lifeParametersFromColor(cJoe));
+                    console.log("Joe1 at (", x, y, ") ", cJoe, Creature.lifeParametersFromColor(cJoe));
 
 
                     // start iteration cycle, decreases energy
@@ -91,7 +91,7 @@ export class World  {
                     {
                         console.log("Joe is dead");
                         this.setPixelColor(x, y, joe.myColor);
-                        this.setOldPixelColor(x, y, joe.myColor);
+                    //20/6 per que? ja estava mort...    this.setOldPixelColor(x, y, joe.myColor);
                         done = true;
                     }
 
@@ -102,17 +102,18 @@ export class World  {
                     done = this.iterationCheckNeighbour(joe, x, y, x + 1, y);
                 }
                 // combat at south-east
-                if (!done && x<this.imageData.width-1 && y < this.imageData.heigth-1)
+                if ((!done) && (x < this.imageData.width-1) && (y < this.imageData.height-1)) {
                     done = this.iterationCheckNeighbour(joe, x, y, x + 1, y+1);
+                }
 
                 // combat at south
-                if (!done && y < this.imageData.heigth - 1)
+                if (!done && y < this.imageData.height - 1) {
                     done = this.iterationCheckNeighbour(joe, x, y, x, y + 1);
-
+                }
                 // combat at south-west
-                if (!done && x > 1 && y < this.imageData.heigth- 1)
+                if (!done && x > 1 && y < this.imageData.height- 1) {
                     done = this.iterationCheckNeighbour(joe, x, y, x-1, y + 1);
-
+                }
 
                 // nothing happened with any neighbour, keep joe
                 if (!done)
@@ -130,14 +131,14 @@ export class World  {
 
     // attack neighbour and update bmp2 with result
     // if joe kills a neighbour or is killed by its neighbours, returns true to stop checking other directions
-    iterationCheckNeighbour(joe: Creature, x1, y1, x2, y2):Boolean {
+    iterationCheckNeighbour(joe: Creature, x1: number, y1:number, x2:number, y2:number):boolean {
         
             // get neighbour color
-            let c2 : Color = this.getOldPixelColor(x2, y2);
-            console.log("Joe2 at ", x2, y2, c2, Creature.lifeParametersFromColor(c2));
+            let cBill : Color = this.getOldPixelColor(x2, y2);
+            console.log("Bill at (", x2, y2,") ", cBill, Creature.lifeParametersFromColor(cBill));
 
             // attack
-            let result : AttackResult = joe.attack(c2);
+            let result : AttackResult = joe.attack(cBill);
 
             // c1 killed its neighbour
             if (result == AttackResult.KILL)     
@@ -172,7 +173,7 @@ export class World  {
                         this.setPixelColor(x2, y2, joe.getOffspring());
                     else
                         // leave neighbour
-                        this.setPixelColor(x2, y2, c2);
+                        this.setPixelColor(x2, y2, cBill);
                 }
                 else
                 {
@@ -198,16 +199,33 @@ export class World  {
                 console.log("DIE");
 
 
-                /*
+                /*                
                 // put killer neighbour's offspring at joe's place or leave joe (to avoid white cells between predators and preys)
-                c2 = joe.isTimeForReproductionColor(c2);
-                if (c2.r==0 && c2.g==0 && c2.b==0)
-                    this.setPixelColor(x1, y1, joe.myColor);
-                else
-                    this.setPixelColor(x1, y1, c2);
+                cBill = Creature.isTimeForReproductionColor(cBill);
+                if (cBill.r==0 && cBill.g==0 && cBill.b==0) {
+                    this.setPixelColor(x1, y1, joe.myColor);   
+                }
+                else {
+                    this.setPixelColor(x1, y1, cBill);
+                }
                 return true;
                 */
-               this.setPixelColor(x1, y1, CreatureSettings.soilColor);
+
+                // if reproduction put killer neighbour's offspring at joe's place 
+                // else move killer and leave soil at killer's old place
+                // also delete killer from oldImage to avoid reprocessing
+                let cBillOffspring = Creature.isTimeForReproductionColor(cBill);
+                if (!(cBillOffspring === CreatureSettings.blackColor)) {
+                    this.setPixelColor(x1, y1, cBillOffspring);   
+                }
+                else {
+                    this.setPixelColor(x1, y1, cBill);
+                    this.setPixelColor(x2, y2, CreatureSettings.soilColor);
+                }
+                this.setOldPixelColor(x2, y2, CreatureSettings.blackColor);
+                return true;
+
+
                 return true;
             }
             console.log("DRAW");
