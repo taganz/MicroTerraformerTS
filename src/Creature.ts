@@ -100,13 +100,9 @@ export class Creature {
     // If herbivores or carnivores are not still activated, don't consume energy
     beginIteration(c: Color){
         this.me = Creature.lifeParametersFromColor(c);
-        this.myColor = Creature.colorFromLifeParameters(this.me);
-
-            // non activated creatures doesn't have metabolism...
-            if (!this.me.activated)
-                return;
-
-            // consumes energy
+        
+        // if activated consume energy 
+        if (this.me.activated) {
             switch (this.me.trophicLevel)
             {
                 case ThrophicLevel.PLANT:
@@ -119,11 +115,12 @@ export class Creature {
                     this.me.energyLevel -= CreatureSettings.ENERGY_CONSUMPTION_CARNIVORES;
                     break;
             }
-
             this.me.energyLevel = this.me.energyLevel < 0 ? 0 : this.me.energyLevel;
+        }
 
-            // update my color with new energy level
-            this.myColor = Creature.colorFromLifeParameters(this.me);
+        // set my color with new energy level
+        // <----- PER QUE ESTIC FIXANT EL COLOR SI JA EL SE?????  NO TE CAP SENTIT QUE JOE SIGUI UNA INSTANCIA. HAN DE SER FUNCS ESTATIQUES AMB LIFEPARAMETERS
+        this.myColor = Creature.colorFromLifeParameters(this.me);
     }
 
     
@@ -262,35 +259,21 @@ export class Creature {
         return pars;
     }
 
-    /*
-    //<---- canviar per un atribut de la classe?
+ 
+   isDead(): boolean{
+       return this.me.energyLevel == 0;
+   }
 
-    // Herbivores and carnivores are not "activated" until they have a first interaction with predator or prey
-    // SOIL is never activated
-    // PLANTS are always activated
-    // This is indicated with energyLevel = -1
-    isActivated(): boolean {
-        if (this.me.trophicLevel == ThrophicLevel.SOIL)
-            return false;
-        else if (this.me.trophicLevel == ThrophicLevel.PLANT)
-            return true;
-        else
-            return this.me.energyLevel > -1;
-        }
-    */
-    isDead(c: Color): boolean {
-        return c == CreatureSettings.deadCreatureColor;
-    }
-
-    getOffspring(): Color {
+   getOffspring(): Color {
         let p : number = -15+ 30*Math.random();
         this.me.energyLevel = CreatureSettings.ENERGY_LEVEL_AT_BIRTH + p;                 // <--- TO BE INCLUDED: mutations
+        this.me.activated = true;           // offspring are always activated    <--- aqui no fa res aixo
         return Creature.colorFromLifeParameters(this.me);
     }
 
 
 
-    isTimeForMoving() : boolean {
+   isTimeForMoving() : boolean {
         let p : number = Math.random();
         switch (this.me.trophicLevel)
         {
@@ -306,7 +289,7 @@ export class Creature {
     }
 
     
-    isTimeForReproduction(): boolean{
+   isTimeForReproduction(): boolean{
         let p : number = Math.random();
         switch(this.me.trophicLevel)
         {
@@ -350,24 +333,12 @@ export class Creature {
     }
     
 
-    getTrophicLevel(c : Color): number {
-        return 0;
-    }
-
-
-    getTrophicLevelString(c: Color): string{
-        return "";
-    }
-
     static isSoil(c: Color): boolean {
         return c.r == 255 && c.g == 255;
     }
 
 
-    /// <summary>
-    /// returns creature's color from parameters
-    /// </summary>
-
+    // returns creature's color from parameters
     static getColor(trophicLevel: ThrophicLevel, energyLevel: number, attackLevel: number, defenseLevel: number): Color {
         let me : LifeParameters = {
         trophicLevel : trophicLevel,
@@ -390,11 +361,12 @@ export class Creature {
 
         // format color depending on thropic level
         let e : number;
-        //if (me.energyLevel == -1)    // non activated
-        //    e = CreatureSettings.ENERGY_LEVEL_COLOR_NOT_ACTIVATED;
-        //else
+        if (me.energyLevel == -1)    // non activated
+            e = CreatureSettings.ENERGY_LEVEL_COLOR_NOT_ACTIVATED;
+        else
             e = Math.ceil(CreatureSettings.ENERGY_LEVEL_COLOR_MIN + me.energyLevel);
         let c : Color;
+        // code into RGB depending on trophiclevel
         switch (me.trophicLevel)
         {
             case ThrophicLevel.PLANT:
@@ -409,21 +381,11 @@ export class Creature {
             default:
                 // something is wrong
                 console.log("Creature > colorFromLifeParameters  *** Error ***"+me.toString())
-                c = CreatureSettings.errorColor;  // <----
+                c = CreatureSettings.errorColor;  
         }            
         return c;
 
     } 
 
-
-    // Changes color to reflect energy level at the beginning of simulation
-    // Plants have ENERGY_LEVEL_AT_BIRTH
-    // Herbivores and Carnivores have -1. They don't start losing energy until they eat something
-    // Return White if color is not a valid creature
-    setInitialEnergyLevel(c: Color): Color {
-        let c2 : Color = {r: 0, g: 0, b: 0};
-        return c2;
-
-    }
 
 }

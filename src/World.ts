@@ -46,43 +46,39 @@ export class World  {
         this.resetImageData();
 
         // we'll use this object to work with creatures
-        let joe = <any> new Creature();
-        let cJoe: Color;
+        let joe : Creature = new Creature();
         let done: boolean;
 
         // for each cell in imageData 
         for(let y: number =0; y<this.imageData.height; y++){
             for(let x: number =0;x<this.imageData.width; x++) {
 
-                let c : Color = this.getPixelColor(x,y);
 
                 // if cell is not black, then joe has already been processed
                 // it could win an attack when its North neighbour attacked it...
+                let c : Color = this.getPixelColor(x,y);      
                 if  (!colorEqual(c,CreatureSettings.blackColor)) {
                     this.setPixelColor(x, y, c);
                     console.log("Joe1 at (", x, y, ") is already processed. Color: " ,c);
-                }
-                
-                // if cell is soil, nothing to do
-                else if (Creature.isSoil(c)){
-                    this.setPixelColor(x, y, c);
-                    console.log("Joe1 at (", x, y, ") is soil. Color: " ,c);
-                }
-                
+                }                
                 // joe hasn't been processed, let's go...
                 else {
 
                     // joe lives at x,y. get its actual color
-                    let cJoe = this.getOldPixelColor(x, y);
-                    console.log("Joe1 at (", x, y, ") ", cJoe, Creature.lifeParametersFromColor(cJoe));
-
-                    let done = false;
-
                     // start iteration cycle, decreases energy
-                    joe.beginIteration(cJoe);
+                    joe.beginIteration(this.getOldPixelColor(x, y));
+                    console.log("Joe1 at (", x, y, ") ", joe.myColor, joe.me);
+                    done = false;
+
+                    // if cell is soil, nothing to do
+                    if (Creature.isSoil(joe.myColor)){
+                        console.log("Joe1 at (", x, y, ") is soil. Color: " ,c);
+                        this.setPixelColor(x, y, joe.myColor);
+                        done = true;
+                    }
 
                     // if it died...
-                    if (joe.isDead())
+                    if (!done && joe.isDead())
                     {
                         console.log("Joe is dead");
                         this.setPixelColor(x, y, joe.myColor);
@@ -230,20 +226,34 @@ export class World  {
         let p: number;
         switch(type){
             case "default":
-            case "pnw":       // plants at a North West square of 3 x 3
+            case "pnw":       // plants at a North West square of 3 x 3. herbs and carn not activated
                 for (let y=0; y<this.imageData.height; y++) {
                     for (let x=0; x<this.imageData.width; x++) {
                         p=Math.random();
-                        if (x<4 && y < 4 && p < 0.7){
-                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.PLANT, 25+Math.random()*50, 100, 50));  
-                        } 
+                        // NW square
+                        if (x<4 && y < 4) {
+                            if (p < 0.7) {
+                                this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.PLANT, 25+Math.random()*50, 100, 50));  
+                            }
+                            else {
+                                this.setPixelColor(x, y, CreatureSettings.soilColor);
+                                }
+                            } 
                         else {
-                         this.setPixelColor(x, y, CreatureSettings.soilColor);
+                            if (p < 0.02) {
+                                this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.HERBIVORE, -1, 100, 50));  
+                            }
+                            else if (p < 0.03) {
+                                this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.CARNIVORE, -1, 100, 100));
+                            }
+                            else {
+                                this.setPixelColor(x, y, CreatureSettings.soilColor);
+                            }
                         }
                     }
                 }
                 break;
-            case "prairie":   // plants everywhere. some herbivores
+            case "prairie":   // plants everywhere. some non activated herbivores and carnivores 
                 for (let y=0; y<this.imageData.height; y++) {
                     for (let x=0; x<this.imageData.width; x++) {
                         p=Math.random();
@@ -253,6 +263,12 @@ export class World  {
                         else if (p < 0.8){
                             this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.PLANT, 25+Math.random()*50, 100, 50));  
                         } 
+                        else if (p < 0.85) {
+                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.HERBIVORE, -1, 100, 50));  
+                        }
+                        else if (p < 0.87) {
+                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.CARNIVORE, -1, 100, 100));
+                        }
                         else {
                             this.setPixelColor(x, y, CreatureSettings.soilColor);
                         }
@@ -264,17 +280,17 @@ export class World  {
                     for (let x=0; x<this.imageData.width; x++) {
 
                         p = Math.random();
-                        if (p < 0.2) {
+                        if (p < 0.3) {
                             this.setPixelColor(x, y, CreatureSettings.soilColor);
                         }
-                        else if (p < 0.7) {
+                        else if (p < 0.8) {
                             this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.PLANT, 25+Math.random()*50, 100, 50));
                         }
-                        else if (p < 0.9) {
-                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.HERBIVORE, 50, 100, 50));  // non activated?
+                        else if (p < 0.98) {
+                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.HERBIVORE, 50, 100, 50));  
                         }
                         else {
-                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.CARNIVORE, -1, 100, 100));
+                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.CARNIVORE, 50, 100, 100));
                         }
                     }
                 }
