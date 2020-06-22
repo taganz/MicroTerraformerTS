@@ -1,4 +1,4 @@
-import { Creature, CreatureSettings, ThrophicLevel, AttackResult, colorEqual } from "./Creature.js"; // .js perque si no no ho posa al .js
+import { Creature, ThrophicLevel, AttackResult, colorEqual } from "./Creature.js"; // .js perque si no no ho posa al .js
 // world contains an ImageData 
 // (doesn't know about canvas nor context)
 export class World {
@@ -20,7 +20,7 @@ export class World {
         for (let x = 0; x < this.imageData.width; x++) {
             for (let y = 0; y < this.imageData.height; y++) {
                 //                this.drawPixel(x,y, 0, 0, 0, 255);
-                this.setPixelColor(x, y, CreatureSettings.blackColor);
+                this.setPixelColor(x, y, Creature.blackColor);
             }
         }
         console.log("Image reset");
@@ -31,7 +31,7 @@ export class World {
         // reset new bitmap, paint all cells black
         this.resetImageData();
         // we'll use this object to work with creatures
-        let joe = new Creature();
+        let joe;
         let done;
         // for each cell in imageData 
         for (let y = 0; y < this.imageData.height; y++) {
@@ -39,7 +39,7 @@ export class World {
                 // if cell is not black, then joe has already been processed
                 // it could win an attack when its North neighbour attacked it...
                 let c = this.getPixelColor(x, y);
-                if (!colorEqual(c, CreatureSettings.blackColor)) {
+                if (!colorEqual(c, Creature.blackColor)) {
                     this.setPixelColor(x, y, c);
                     console.log("Joe1 at (", x, y, ") is already processed. Color: ", c);
                 }
@@ -47,19 +47,20 @@ export class World {
                 else {
                     // joe lives at x,y. get its actual color
                     // start iteration cycle, decreases energy
-                    joe.beginIteration(this.getOldPixelColor(x, y));
-                    console.log("Joe1 at (", x, y, ") ", joe.myColor, joe.me);
+                    joe = Creature.lifeParametersFromColor(this.getOldPixelColor(x, y));
+                    joe = Creature.beginIteration(joe);
+                    console.log("Joe1 at (", x, y, ") ", joe);
                     done = false;
                     // if cell is soil, nothing to do
-                    if (Creature.isSoil(joe.myColor)) {
-                        console.log("Joe1 at (", x, y, ") is soil. Color: ", c);
-                        this.setPixelColor(x, y, joe.myColor);
+                    if (Creature.isSoil(joe.color)) {
+                        console.log("Joe1 at (", x, y, ") is soil. ", joe);
+                        this.setPixelColor(x, y, joe.color);
                         done = true;
                     }
                     // if it died...
-                    if (!done && joe.isDead()) {
-                        console.log("Joe is dead");
-                        this.setPixelColor(x, y, joe.myColor);
+                    if (!done && joe.dead) {
+                        console.log("Joe is dead ", joe);
+                        this.setPixelColor(x, y, joe.color);
                         done = true;
                     }
                     // combat at east
@@ -80,7 +81,7 @@ export class World {
                     }
                     // nothing happened with any neighbour, keep joe
                     if (!done) {
-                        this.setPixelColor(x, y, joe.myColor);
+                        this.setPixelColor(x, y, joe.color);
                     }
                 }
             }
@@ -91,40 +92,41 @@ export class World {
     // if joe kills a neighbour or is killed by its neighbours, returns true to stop checking other directions
     iterationCheckNeighbour(joe, x1, y1, x2, y2) {
         // get neighbour color
-        let cBill = this.getOldPixelColor(x2, y2);
-        console.log("Bill at (", x2, y2, ") ", cBill, Creature.lifeParametersFromColor(cBill));
+        let bill = Creature.lifeParametersFromColor(this.getOldPixelColor(x2, y2));
+        console.log("Bill at (", x2, y2, ") ", bill);
         // attack
-        let result = joe.attack(cBill);
+        let attack = Creature.attack(joe, bill);
+        joe = attack.me_post;
+        bill = attack.it_post;
         // joe kill bill
-        if (result == AttackResult.KILL) {
+        if (attack.result == AttackResult.KILL) {
             console.log("KILL");
             // joe moves to bill position
-            this.setPixelColor(x2, y2, joe.myColor);
+            this.setPixelColor(x2, y2, joe.color);
             // after killing joe has a probability of give birth
-            if (joe.isTimeForReproduction()) {
-                this.setPixelColor(x1, y1, joe.getOffspring());
+            if (Creature.isTimeForReproduction(joe)) {
+                this.setPixelColor(x1, y1, Creature.getOffspring(joe).color);
             }
             else {
-                this.setPixelColor(x1, y1, CreatureSettings.soilColor);
+                this.setPixelColor(x1, y1, Creature.soilColor);
             }
             // delete bill from oldImage to prevent further processing
-            this.setOldPixelColor(x2, y2, CreatureSettings.blackColor);
+            this.setOldPixelColor(x2, y2, Creature.blackColor);
             return true;
         }
-        if (result == AttackResult.DIE) {
+        if (attack.result == AttackResult.DIE) {
             console.log("DIE");
             // bill moves to joe's position
-            this.setPixelColor(x1, y1, cBill);
+            this.setPixelColor(x1, y1, bill.color);
             // bill has a chance for reproduction, if not, leave soil at bill's place
-            let cBillOffspring = Creature.isTimeForReproductionColor(cBill);
-            if (!(cBillOffspring === CreatureSettings.blackColor)) {
-                this.setPixelColor(x2, y2, cBillOffspring);
+            if (Creature.isTimeForReproduction(bill)) {
+                this.setPixelColor(x2, y2, Creature.getOffspring(bill).color);
             }
             else {
-                this.setPixelColor(x2, y2, CreatureSettings.soilColor);
+                this.setPixelColor(x2, y2, Creature.soilColor);
             }
             // delete bill from oldImage to prevent further processing
-            this.setOldPixelColor(x2, y2, CreatureSettings.blackColor);
+            this.setOldPixelColor(x2, y2, Creature.blackColor);
             return true;
         }
         console.log("DRAW");
@@ -181,7 +183,7 @@ export class World {
                                 this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.PLANT, 25 + Math.random() * 50, 100, 50));
                             }
                             else {
-                                this.setPixelColor(x, y, CreatureSettings.soilColor);
+                                this.setPixelColor(x, y, Creature.soilColor);
                             }
                         }
                         else {
@@ -192,7 +194,7 @@ export class World {
                                 this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.CARNIVORE, -1, 100, 100));
                             }
                             else {
-                                this.setPixelColor(x, y, CreatureSettings.soilColor);
+                                this.setPixelColor(x, y, Creature.soilColor);
                             }
                         }
                     }
@@ -215,7 +217,7 @@ export class World {
                             this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.CARNIVORE, -1, 100, 100));
                         }
                         else {
-                            this.setPixelColor(x, y, CreatureSettings.soilColor);
+                            this.setPixelColor(x, y, Creature.soilColor);
                         }
                     }
                 }
@@ -225,7 +227,7 @@ export class World {
                     for (let x = 0; x < this.imageData.width; x++) {
                         p = Math.random();
                         if (p < 0.3) {
-                            this.setPixelColor(x, y, CreatureSettings.soilColor);
+                            this.setPixelColor(x, y, Creature.soilColor);
                         }
                         else if (p < 0.8) {
                             this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.PLANT, 25 + Math.random() * 50, 100, 50));
