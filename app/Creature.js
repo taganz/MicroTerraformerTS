@@ -1,3 +1,6 @@
+export function colorEqual(c1, c2) {
+    return c1.r == c2.r && c1.g == c2.g && c1.b == c2.b;
+}
 //  DEFINES 
 export var ThrophicLevel;
 (function (ThrophicLevel) {
@@ -17,7 +20,7 @@ export class CreatureSettings {
 CreatureSettings.deadCreatureColor = { r: 255, g: 255, b: 255 }; // equivalent to less defense soil
 CreatureSettings.soilColor = { r: 255, g: 255, b: 128 };
 CreatureSettings.errorColor = { r: 240, g: 50, b: 12 };
-CreatureSettings.blackColor = { r: 255, g: 255, b: 255 };
+CreatureSettings.blackColor = { r: 0, g: 0, b: 0 };
 //
 //  SIMULATION PARAMETERS
 //
@@ -33,8 +36,8 @@ CreatureSettings.ENERGY_LEVEL_COLOR_MIN = 155; // energyLevel = color - ENERGY_L
 CreatureSettings.ENERGY_LEVEL_COLOR_NOT_ACTIVATED = 154; // 154 (energyLevel = -1) means "not activated"
 CreatureSettings.ENERGY_LEVEL_AT_BIRTH = 50;
 CreatureSettings.PLANT_REPRODUCTION_PROBABILITY = 0.2; // recommended 0.1 - 0.5
-CreatureSettings.HERBIVORE_REPRODUCTION_PROBABILITY = 0.3; // recommended 0.15 - 
-CreatureSettings.CARNIVORE_REPRODUCTION_PROBABILITY = 0.3;
+CreatureSettings.HERBIVORE_REPRODUCTION_PROBABILITY = 0.2; // recommended 0.15 - 
+CreatureSettings.CARNIVORE_REPRODUCTION_PROBABILITY = 0.1;
 // probability to move after killing a creature
 CreatureSettings.PLANT_MOVE_PROBABILITY = 0;
 CreatureSettings.HERBIVORE_MOVE_PROBABILITY = 0.2;
@@ -46,9 +49,12 @@ export class Creature {
             trophicLevel: 0,
             attackLevel: 0,
             defenseLevel: 0,
-            energyLevel: 0
+            energyLevel: 0,
+            activated: false
         };
         this.myColor = { r: 0, g: 0, b: 0 };
+        // soil is never activated, plants are always, herbivores and carnivores only if energy == -1
+        this.me.activated = Creature.isActivated(this.me);
     }
     // initialize a creature with this color and do rutine actions
     // Consumes energy, updates color 
@@ -56,10 +62,8 @@ export class Creature {
     beginIteration(c) {
         this.me = Creature.lifeParametersFromColor(c);
         this.myColor = Creature.colorFromLifeParameters(this.me);
-        // not "living creatures" doesn't have metabolism...
-        if (this.me.trophicLevel == ThrophicLevel.SOIL)
-            return;
-        if (this.isActivated() == false)
+        // non activated creatures doesn't have metabolism...
+        if (!this.me.activated)
             return;
         // consumes energy
         switch (this.me.trophicLevel) {
@@ -82,31 +86,55 @@ export class Creature {
         let it = Creature.lifeParametersFromColor(itsColor);
         // combats only occur when trophic levels are differents by one level
         // I'm a predator
-        if (this.me.trophicLevel - it.trophicLevel == 1) {
+        if (this.me.trophicLevel == ThrophicLevel.CARNIVORE && it.trophicLevel == ThrophicLevel.HERBIVORE
+            || this.me.trophicLevel == ThrophicLevel.HERBIVORE && it.trophicLevel == ThrophicLevel.PLANT
+            || this.me.trophicLevel == ThrophicLevel.PLANT && it.trophicLevel == ThrophicLevel.SOIL) {
             if (this.me.attackLevel > it.defenseLevel) {
                 // activate if necessary
-                if (!this.isActivated()) {
-                    this.me.energyLevel = CreatureSettings.ENERGY_LEVEL_AT_BIRTH;
-                }
-                this.me.energyLevel += CreatureSettings.ENERGY_INCREMENT_KILLING; // <---- ENERGY INCREASE, TO BE ADJUSTED
+                if (!this.me.activated)
+                    this.me = Creature.activate(this.me);
+                this.me.energyLevel += CreatureSettings.ENERGY_INCREMENT_KILLING;
                 return AttackResult.KILL;
+                // <--- WORLD S'ENCARREGA DE MATAR EL BILL. HAURIA D'ESTAR AQUI?
             }
         }
         // I'm a prey
-        if (this.me.trophicLevel - it.trophicLevel == -1) {
+        if (it.trophicLevel == ThrophicLevel.CARNIVORE && this.me.trophicLevel == ThrophicLevel.HERBIVORE
+            || it.trophicLevel == ThrophicLevel.HERBIVORE && this.me.trophicLevel == ThrophicLevel.PLANT
+            || it.trophicLevel == ThrophicLevel.PLANT && this.me.trophicLevel == ThrophicLevel.SOIL) {
             if (this.me.defenseLevel < it.attackLevel) {
-                this.me.energyLevel = 0;
+                // activate if necessary
+                if (!it.activated)
+                    it = Creature.activate(it); // <---- AIXO ES PERD!!!
+                this.me.energyLevel = 0; // <---- ES IGUAL, WORLD MATARA EL JOE
                 return AttackResult.DIE;
             }
         }
         return AttackResult.DRAW;
+    }
+    static activate(lp) {
+        let lp2 = lp;
+        if (lp2.trophicLevel == ThrophicLevel.CARNIVORE) {
+            lp2.activated = true;
+            lp2.energyLevel = CreatureSettings.ENERGY_LEVEL_AT_BIRTH; // <-- HAURIA DE SER DIFERENT SEGONS TL?
+        }
+        else if (lp2.trophicLevel == ThrophicLevel.HERBIVORE) {
+            lp2.activated = true;
+            lp2.energyLevel = CreatureSettings.ENERGY_LEVEL_AT_BIRTH; // <-- HAURIA DE SER DIFERENT SEGONS TL?
+        }
+        return lp2;
+    }
+    static isActivated(lp) {
+        return lp.trophicLevel == ThrophicLevel.PLANT
+            || (lp.trophicLevel != ThrophicLevel.SOIL && lp.energyLevel > -1);
     }
     static lifeParametersFromColor(col) {
         let pars = {
             trophicLevel: 0,
             attackLevel: 0,
             defenseLevel: 0,
-            energyLevel: 0
+            energyLevel: 0,
+            activated: false
         }; // <-- com inicialitzar en blanc?????
         // backup
         if (col.r == 255 && col.g == 255) {
@@ -137,38 +165,45 @@ export class Creature {
                 pars.energyLevel = 0;
                 pars.attackLevel = 0;
                 pars.defenseLevel = 128 - col.b / 2;
+                pars.activated = false;
                 break;
             case ThrophicLevel.PLANT:
                 pars.energyLevel = col.g - CreatureSettings.ENERGY_LEVEL_COLOR_MIN;
                 pars.attackLevel = col.r;
                 pars.defenseLevel = col.b;
+                pars.activated = true;
                 break;
             case ThrophicLevel.HERBIVORE:
                 pars.energyLevel = col.b - CreatureSettings.ENERGY_LEVEL_COLOR_MIN;
                 pars.attackLevel = col.g;
                 pars.defenseLevel = col.r;
+                pars.activated = pars.energyLevel > -1;
                 break;
             case ThrophicLevel.CARNIVORE:
                 pars.energyLevel = col.r - CreatureSettings.ENERGY_LEVEL_COLOR_MIN;
                 pars.attackLevel = col.b;
                 pars.defenseLevel = col.g;
+                pars.activated = pars.energyLevel > -1;
                 break;
         }
         return pars;
     }
+    /*
     //<---- canviar per un atribut de la classe?
+
     // Herbivores and carnivores are not "activated" until they have a first interaction with predator or prey
     // SOIL is never activated
     // PLANTS are always activated
     // This is indicated with energyLevel = -1
-    isActivated() {
+    isActivated(): boolean {
         if (this.me.trophicLevel == ThrophicLevel.SOIL)
             return false;
         else if (this.me.trophicLevel == ThrophicLevel.PLANT)
             return true;
         else
             return this.me.energyLevel > -1;
-    }
+        }
+    */
     isDead(c) {
         return c == CreatureSettings.deadCreatureColor;
     }
@@ -229,6 +264,9 @@ export class Creature {
     getTrophicLevelString(c) {
         return "";
     }
+    static isSoil(c) {
+        return c.r == 255 && c.g == 255;
+    }
     /// <summary>
     /// returns creature's color from parameters
     /// </summary>
@@ -237,22 +275,24 @@ export class Creature {
             trophicLevel: trophicLevel,
             energyLevel: energyLevel,
             attackLevel: attackLevel,
-            defenseLevel: defenseLevel
+            defenseLevel: defenseLevel,
+            activated: false
         };
+        me.activated = Creature.isActivated(me);
         return this.colorFromLifeParameters(me);
     }
     static colorFromLifeParameters(me) {
         if (me.trophicLevel == ThrophicLevel.SOIL)
-            return CreatureSettings.soilColor;
-        // if creature has died, cell becames white (to avoid problems with soil defence)   <----- TO BE ADJUSTED 
-        if (me.energyLevel == 0) // -1 means not activated
+            return CreatureSettings.soilColor; // <--- ojo tenia energia diferent ?
+        // if creature has died, cell becames white
+        if (me.energyLevel == 0)
             return CreatureSettings.deadCreatureColor;
         // format color depending on thropic level
         let e;
-        if (me.energyLevel == -1) // non activated
-            e = CreatureSettings.ENERGY_LEVEL_COLOR_NOT_ACTIVATED;
-        else
-            e = Math.ceil(CreatureSettings.ENERGY_LEVEL_COLOR_MIN + me.energyLevel);
+        //if (me.energyLevel == -1)    // non activated
+        //    e = CreatureSettings.ENERGY_LEVEL_COLOR_NOT_ACTIVATED;
+        //else
+        e = Math.ceil(CreatureSettings.ENERGY_LEVEL_COLOR_MIN + me.energyLevel);
         let c;
         switch (me.trophicLevel) {
             case ThrophicLevel.PLANT:

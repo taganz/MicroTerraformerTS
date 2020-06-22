@@ -19,7 +19,24 @@
             <canvas id="canvas"width="400" height="200" style="border:1px solid #000000;"></canvas>
         </div>
         <div id="info-panel">
-            <div id="buttons-control" class="buttons">Control
+            <div id="status" class="text">Status</div>
+            <div id="buttons-control" class="buttons">
+                <form>
+                    <p>World size: 
+                        <select id="lst-size">
+                          <option value="6,3">6x3</option>
+                          <option value="20,10" selected="selected">20x10</option>
+                          <option value="50,25">50x25</option>
+                        </select>
+                     </p>
+                     <p>Initial population: 
+                        <select id="lst-initial-population">
+                            <option value="pnw" selected="selected">Plants NW</option>
+                            <option value="prairie">Prairie</option>
+                            <option value="random">Random</option>
+                        </select>
+                     </p>
+                </form>
                 <button id = "btn-new" class="button" type="button">New</button>
                 <button id = "btn-run" class="button" type="button">Run</button>
                 <button id = "btn-stop" class="button" type="button">Stop</button>
@@ -30,8 +47,10 @@
                 <button id = "btn-load" class="button" type="button">Load</button>
                 <button id = "btn-save" class="button" type="button">Save</button>
             </div>
-            <div id="status" class="text">Status</div>
-            <div id="instructions" class="text">Instructions</div>
+            <div id="instructions" class="text">Instructions
+                <p>Select size and create new simulation</p>
+                Instructions are similar to <a href="https://terraformersim.wordpress.com/project/cell-ecosystem-simulator/" target="_blank">
+                 those ones</a> :-)
             </div>
         </div>
     </div>

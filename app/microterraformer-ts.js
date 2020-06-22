@@ -1,28 +1,38 @@
 /// <reference path='World.ts' />
 import { World } from "./World.js"; // .js perque si no no ho posa al .js
-let world = new World(6, 3);
 let htmlCanvas = document.getElementById("canvas");
 let ctxHtmlCanvas = htmlCanvas.getContext("2d");
+// avoid smooth while reescaling images
 ctxHtmlCanvas.mozImageSmoothingEnabled = false;
 ctxHtmlCanvas.webkitImageSmoothingEnabled = false;
 ctxHtmlCanvas.msImageSmoothingEnabled = false;
 ctxHtmlCanvas.imageSmoothingEnabled = false;
 let imageData = ctxHtmlCanvas.getImageData(0, 0, htmlCanvas.width, htmlCanvas.height);
 // lastCanvas stores the last calculated image
-let worldImageCanvas = document.createElement("canvas");
-let lastCtx = worldImageCanvas.getContext("2d");
-worldImageCanvas.width = world.imageData.width;
-worldImageCanvas.height = world.imageData.height;
-doNew();
+let world;
+let worldImageCanvas;
+let lastCtx; // <---
+// new simulation
+function doNew() {
+    let sizeStr = document.getElementById("lst-size").value;
+    let x = parseInt(sizeStr.slice(0, sizeStr.search(",")));
+    let y = parseInt(sizeStr.slice(sizeStr.search(",") + 1));
+    let initPopStr = document.getElementById("lst-initial-population").value;
+    console.log("new ", x, y);
+    logStatus("new");
+    // create world instance with selected size
+    world = new World(x, y);
+    worldImageCanvas = document.createElement("canvas");
+    lastCtx = worldImageCanvas.getContext("2d");
+    worldImageCanvas.width = world.imageData.width;
+    worldImageCanvas.height = world.imageData.height;
+    // reset screen
+    world.new(initPopStr);
+    updateCanvas();
+}
 function updateCanvas() {
     worldImageCanvas.getContext("2d").putImageData(world.imageData, 0, 0);
     ctxHtmlCanvas.drawImage(worldImageCanvas, 0, 0, 400, 200);
-}
-// new simulation
-function doNew() {
-    logStatus("new");
-    world.new();
-    updateCanvas();
 }
 document.getElementById("btn-new").addEventListener("click", function () {
     doNew();
@@ -76,5 +86,7 @@ function logStatus(msg) {
     document.getElementById("status").innerHTML = msg;
     console.log(msg);
 }
+// start
+doNew();
 logStatus("Microterraformer-TS is loaded");
 //# sourceMappingURL=microterraformer-ts.js.map

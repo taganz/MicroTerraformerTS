@@ -1,33 +1,26 @@
-import { Creature, CreatureSettings, ThrophicLevel, AttackResult } from "./Creature.js"; // .js perque si no no ho posa al .js
+import { Creature, CreatureSettings, ThrophicLevel, AttackResult, colorEqual } from "./Creature.js"; // .js perque si no no ho posa al .js
 // world contains an ImageData 
 // (doesn't know about canvas nor context)
 export class World {
     constructor(width, height) {
         this.imageData = new ImageData(width, height);
         this.oldImageData = new ImageData(width, height);
-        this.new();
+        this.new("default");
         console.log("World is created");
     }
     // reset world with default values
-    new() {
+    new(initPopStr) {
         this.iteration = 0;
         this.resetImageData();
-        // create some creatures at random   <-- TESTING
-        this.setPixelColor(0, 0, Creature.getColor(ThrophicLevel.CARNIVORE, -1, 50, 100));
-        this.setPixelColor(1, 0, Creature.getColor(ThrophicLevel.PLANT, 50, 100, 50));
-        this.setPixelColor(2, 0, Creature.getColor(ThrophicLevel.PLANT, 50, 100, 50));
-        this.setPixelColor(0, 1, Creature.getColor(ThrophicLevel.PLANT, 50, 100, 50));
-        this.setPixelColor(1, 1, Creature.getColor(ThrophicLevel.HERBIVORE, 50, 100, 50)); // non activated?
-        this.setPixelColor(2, 1, Creature.getColor(ThrophicLevel.PLANT, 50, 100, 50));
-        this.setPixelColor(0, 2, Creature.getColor(ThrophicLevel.PLANT, 50, 100, 50));
-        this.setPixelColor(1, 2, Creature.getColor(ThrophicLevel.PLANT, 50, 100, 50));
-        this.setPixelColor(2, 2, Creature.getColor(ThrophicLevel.PLANT, 50, 100, 50));
+        let p;
+        this.setInitialPopulation(initPopStr);
     }
     // reset imageData to black
     resetImageData() {
         for (let x = 0; x < this.imageData.width; x++) {
             for (let y = 0; y < this.imageData.height; y++) {
-                this.drawPixel(x, y, 0, 0, 0, 255);
+                //                this.drawPixel(x,y, 0, 0, 0, 255);
+                this.setPixelColor(x, y, CreatureSettings.blackColor);
             }
         }
         console.log("Image reset");
@@ -44,49 +37,52 @@ export class World {
         // for each cell in imageData 
         for (let y = 0; y < this.imageData.height; y++) {
             for (let x = 0; x < this.imageData.width; x++) {
-                done = false;
-                // we first must check if joe has already been processed in a previous step 
-                // (may be it won an attack when its North neighbour attacked it...
-                // if so, its cell in imageData will not be black anymore
                 let c = this.getPixelColor(x, y);
                 // if cell is not black, then joe has already been processed
-                if (!(c.r == 0 && c.g == 0 && c.b == 0)) {
-                    done = true;
+                // it could win an attack when its North neighbour attacked it...
+                if (!colorEqual(c, CreatureSettings.blackColor)) {
+                    this.setPixelColor(x, y, c);
+                    console.log("Joe1 at (", x, y, ") is already processed. Color: ", c);
                 }
-                if (!done) {
-                    // joe hasn't been processed, let's go...
+                // if cell is soil, nothing to do
+                else if (Creature.isSoil(c)) {
+                    this.setPixelColor(x, y, c);
+                    console.log("Joe1 at (", x, y, ") is soil. Color: ", c);
+                }
+                // joe hasn't been processed, let's go...
+                else {
                     // joe lives at x,y. get its actual color
                     let cJoe = this.getOldPixelColor(x, y);
                     console.log("Joe1 at (", x, y, ") ", cJoe, Creature.lifeParametersFromColor(cJoe));
+                    let done = false;
                     // start iteration cycle, decreases energy
                     joe.beginIteration(cJoe);
                     // if it died...
                     if (joe.isDead()) {
                         console.log("Joe is dead");
                         this.setPixelColor(x, y, joe.myColor);
-                        //20/6 per que? ja estava mort...    this.setOldPixelColor(x, y, joe.myColor);
                         done = true;
                     }
-                }
-                // combat at east
-                if (!done && x < this.imageData.width - 1) {
-                    done = this.iterationCheckNeighbour(joe, x, y, x + 1, y);
-                }
-                // combat at south-east
-                if ((!done) && (x < this.imageData.width - 1) && (y < this.imageData.height - 1)) {
-                    done = this.iterationCheckNeighbour(joe, x, y, x + 1, y + 1);
-                }
-                // combat at south
-                if (!done && y < this.imageData.height - 1) {
-                    done = this.iterationCheckNeighbour(joe, x, y, x, y + 1);
-                }
-                // combat at south-west
-                if (!done && x > 1 && y < this.imageData.height - 1) {
-                    done = this.iterationCheckNeighbour(joe, x, y, x - 1, y + 1);
-                }
-                // nothing happened with any neighbour, keep joe
-                if (!done) {
-                    this.setPixelColor(x, y, joe.myColor);
+                    // combat at east
+                    if (!done && x < this.imageData.width - 1) {
+                        done = this.iterationCheckNeighbour(joe, x, y, x + 1, y);
+                    }
+                    // combat at south-east
+                    if ((!done) && (x < this.imageData.width - 1) && (y < this.imageData.height - 1)) {
+                        done = this.iterationCheckNeighbour(joe, x, y, x + 1, y + 1);
+                    }
+                    // combat at south
+                    if (!done && y < this.imageData.height - 1) {
+                        done = this.iterationCheckNeighbour(joe, x, y, x, y + 1);
+                    }
+                    // combat at south-west
+                    if (!done && x > 1 && y < this.imageData.height - 1) {
+                        done = this.iterationCheckNeighbour(joe, x, y, x - 1, y + 1);
+                    }
+                    // nothing happened with any neighbour, keep joe
+                    if (!done) {
+                        this.setPixelColor(x, y, joe.myColor);
+                    }
                 }
             }
         }
@@ -100,75 +96,36 @@ export class World {
         console.log("Bill at (", x2, y2, ") ", cBill, Creature.lifeParametersFromColor(cBill));
         // attack
         let result = joe.attack(cBill);
-        // c1 killed its neighbour
+        // joe kill bill
         if (result == AttackResult.KILL) {
             console.log("KILL");
-            /* 9/8/17 --
-              
-            // joe stay at its position
-            bmp2.SetPixel(x1, y1, joe.me.myColor);
-            // and joe has a probability of give birth at neighbour position
-            if (joe.IsTimeForReproduction())
-            {
-                bmp2.SetPixel(x2, y2, joe.GetOffspring());              // offsprings are born with initial energy
-            }
-            /*
-            else
-            {
-                // leave neighbour
-                bmp2.SetPixel(x2, y2, c2);
-            }
-            */
-            // after killing joe can move to its neighbour position
-            // it also has a chance for reproduction
-            if (!joe.isTimeForMoving()) {
-                // stay at place
-                this.setPixelColor(x1, y1, joe.myColor);
-                // try to reproduce to neighbour place
-                if (joe.isTimeForReproduction())
-                    this.setPixelColor(x2, y2, joe.getOffspring());
-                else
-                    // leave neighbour
-                    this.setPixelColor(x2, y2, cBill);
+            // joe moves to bill position
+            this.setPixelColor(x2, y2, joe.myColor);
+            // after killing joe has a probability of give birth
+            if (joe.isTimeForReproduction()) {
+                this.setPixelColor(x1, y1, joe.getOffspring());
             }
             else {
-                // move
-                this.setPixelColor(x2, y2, joe.myColor);
-                // try to reproduce at joe's previous place
-                if (joe.isTimeForReproduction())
-                    this.setPixelColor(x1, y1, joe.getOffspring());
-                else
-                    // clean place
-                    this.setPixelColor(x1, y1, CreatureSettings.deadCreatureColor);
+                this.setPixelColor(x1, y1, CreatureSettings.soilColor);
             }
+            // delete bill from oldImage to prevent further processing
+            this.setOldPixelColor(x2, y2, CreatureSettings.blackColor);
             return true;
         }
         if (result == AttackResult.DIE) {
             console.log("DIE");
-            /*
-            // put killer neighbour's offspring at joe's place or leave joe (to avoid white cells between predators and preys)
-            cBill = Creature.isTimeForReproductionColor(cBill);
-            if (cBill.r==0 && cBill.g==0 && cBill.b==0) {
-                this.setPixelColor(x1, y1, joe.myColor);
-            }
-            else {
-                this.setPixelColor(x1, y1, cBill);
-            }
-            return true;
-            */
-            // if reproduction put killer neighbour's offspring at joe's place 
-            // else move killer and leave soil at killer's old place
-            // also delete killer from oldImage to avoid reprocessing
+            // bill moves to joe's position
+            this.setPixelColor(x1, y1, cBill);
+            // bill has a chance for reproduction, if not, leave soil at bill's place
             let cBillOffspring = Creature.isTimeForReproductionColor(cBill);
             if (!(cBillOffspring === CreatureSettings.blackColor)) {
-                this.setPixelColor(x1, y1, cBillOffspring);
+                this.setPixelColor(x2, y2, cBillOffspring);
             }
             else {
-                this.setPixelColor(x1, y1, cBill);
                 this.setPixelColor(x2, y2, CreatureSettings.soilColor);
             }
+            // delete bill from oldImage to prevent further processing
             this.setOldPixelColor(x2, y2, CreatureSettings.blackColor);
-            return true;
             return true;
         }
         console.log("DRAW");
@@ -180,21 +137,6 @@ export class World {
     }
     saveWorld(filename) {
         console.log("world: save not available!");
-    }
-    // That's how you define the value of a pixel //
-    drawPixel(x, y, r, g, b, a) {
-        let index = (x + y * this.imageData.width) * 4;
-        this.imageData.data[index + 0] = r;
-        this.imageData.data[index + 1] = g;
-        this.imageData.data[index + 2] = b;
-        this.imageData.data[index + 3] = a;
-    }
-    drawOldPixel(x, y, r, g, b, a) {
-        let index = (x + y * this.oldImageData.width) * 4;
-        this.oldImageData.data[index + 0] = r;
-        this.oldImageData.data[index + 1] = g;
-        this.oldImageData.data[index + 2] = b;
-        this.oldImageData.data[index + 3] = a;
     }
     getPixelIndex(x, y) {
         return (x + y * this.imageData.width) * 4;
@@ -225,6 +167,62 @@ export class World {
         this.oldImageData.data[index + 1] = c.g;
         this.oldImageData.data[index + 2] = c.b;
         this.oldImageData.data[index + 3] = 255;
+    }
+    setInitialPopulation(type) {
+        let p;
+        switch (type) {
+            case "default":
+            case "pnw": // plants at a North West square of 3 x 3
+                for (let y = 0; y < this.imageData.height; y++) {
+                    for (let x = 0; x < this.imageData.width; x++) {
+                        p = Math.random();
+                        if (x < 4 && y < 4 && p < 0.7) {
+                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.PLANT, 25 + Math.random() * 50, 100, 50));
+                        }
+                        else {
+                            this.setPixelColor(x, y, CreatureSettings.soilColor);
+                        }
+                    }
+                }
+                break;
+            case "prairie": // plants everywhere. some herbivores
+                for (let y = 0; y < this.imageData.height; y++) {
+                    for (let x = 0; x < this.imageData.width; x++) {
+                        p = Math.random();
+                        if (p < 0.01) {
+                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.HERBIVORE, 25 + Math.random() * 50, 100, 50)); // non activated?
+                        }
+                        else if (p < 0.8) {
+                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.PLANT, 25 + Math.random() * 50, 100, 50));
+                        }
+                        else {
+                            this.setPixelColor(x, y, CreatureSettings.soilColor);
+                        }
+                    }
+                }
+                break;
+            case "random": // completly at random
+                for (let y = 0; y < this.imageData.height; y++) {
+                    for (let x = 0; x < this.imageData.width; x++) {
+                        p = Math.random();
+                        if (p < 0.2) {
+                            this.setPixelColor(x, y, CreatureSettings.soilColor);
+                        }
+                        else if (p < 0.7) {
+                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.PLANT, 25 + Math.random() * 50, 100, 50));
+                        }
+                        else if (p < 0.9) {
+                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.HERBIVORE, 50, 100, 50)); // non activated?
+                        }
+                        else {
+                            this.setPixelColor(x, y, Creature.getColor(ThrophicLevel.CARNIVORE, -1, 100, 100));
+                        }
+                    }
+                }
+                break;
+            default:
+                console.log("setInitialPopulation invalid type: ", type);
+        }
     }
 }
 //# sourceMappingURL=World.js.map
