@@ -3,6 +3,9 @@ var path = require('path');
 //import express from 'express';  // ES6
 const app = express();
 
+// $PORT env var if available or fallback to default (per heroku)
+const port = process.env.PORT || 1234;
+
 //app.use('/node_modules', express.static('node_modules'));
 //app.use('/app', express.static('public'));
 
@@ -33,5 +36,5 @@ app.get('/', function(req, res){
 
 
 
-app.listen(1234,
-     () => console.log('Express server running at http://127.0.0.1:1234'));
+app.listen(port,
+     () => console.log(`Express server running at http://127.0.0.1:${port}`));
